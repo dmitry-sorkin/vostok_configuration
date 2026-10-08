@@ -8,6 +8,7 @@
 import datetime, heapq, math, optparse, re, sys
 
 PROCESSED_MARKER = '; Processed by fast tool swaps script'
+TOOL_SWAPS_START_MARKER = ';fast_tool_swaps_start'
 EXTRUDER_SYNC_GCMD_TMPL = 'SYNC_EXTRUDER_MOTION EXTRUDER=%s MOTION_QUEUE=%s\n'
 CARRIAGES_WIPE_PREPARE_SNIPPET = \
 """SET_DUAL_CARRIAGE CARRIAGE={next_carriage} MODE=DIRECT GCODE_AXIS={gcode_id}
@@ -338,6 +339,10 @@ class GCodeProcessor:
         self.preprocess_gcode(lines)
         for line in self.prefix_lines:
             yield line
+        if not self.buffer:
+            # The input GCode has no tool swaps marker, so there is nothing
+            # to process; the whole input was passed through verbatim above.
+            return
         yield PROCESSED_MARKER + datetime.datetime.now(datetime.UTC).strftime(
                 ' on %Y-%m-%d at %H:%M:%S UTC\n')
         for ind in range(len(self.buffer)):
@@ -364,7 +369,7 @@ class GCodeProcessor:
         gcode_state = GCodeState(num_tools=self.num_tools)
         for line in lines:
             if self.skip_until_marker:
-                if ';fast_tool_swaps_start' in line:
+                if TOOL_SWAPS_START_MARKER in line:
                     self.skip_until_marker = False
                 else:
                     self.prefix_lines.append(line)
@@ -744,6 +749,15 @@ def main():
                         'The input file was already processed by the fast tool'
                         ' swaps script once. You must use the original file'
                         ' for processing, or slice GCode anew.')
+    if not any(TOOL_SWAPS_START_MARKER in line for line in input_lines):
+        sys.stderr.write(
+                "The input file does not contain '%s' marker, skipping"
+                " the post-processing.\n" % TOOL_SWAPS_START_MARKER)
+        if options.output:
+            with open(options.output, mode='wt', encoding='utf-8') as fo:
+                for line in input_lines:
+                    fo.write(line)
+        return
     with open(options.output or args[0], mode='wt', encoding='utf-8') as fo:
         try:
             for out_line in gcode_processor.process(iter(input_lines)):
