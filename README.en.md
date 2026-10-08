@@ -16,6 +16,8 @@ The flashing and installation procedure is covered in detail in several articles
 
 Note that the articles are written in Russian. A lot of information on how to install and further tune this configuration is also provided directly in the `printer.cfg`, `printer_base.cfg` and `electronics_*.cfg` files.
 
+Electronics configurations for boards maintained by users themselves live in the [`user_configs/`](user_configs/README.md) folder.
+
 ## Contributing your own configuration
 
 1. Clone the repository to your computer:
@@ -27,14 +29,14 @@ Note that the articles are written in Russian. A lot of information on how to in
    ```bash
    git checkout -b add-<board>
    ```
-3. Add the configuration file to the repository root. Requirements for the file:
-   - Location — repository root;
+3. Add the configuration file to the `user_configs/` folder. Requirements for the file:
+   - Location — `user_configs/`;
    - Name — `electronics_*.cfg`, where `*` describes the mainboard and the switch boards in use;
    - At the top of the file — the electronics wiring diagram used by this configuration;
    - You may also state the author and any other relevant information at the top of the file.
 4. Commit the changes and push the branch:
    ```bash
-   git add electronics_<board>.cfg
+   git add user_configs/electronics_<board>.cfg
    git commit -m "Add configuration for <board>"
    git push origin add-<board>
    ```
